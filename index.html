@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tap Trials</title>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0b0f1f;
+  --panel:rgba(255,255,255,0.06);
+  --accent:#4ade80;
+  --accent2:#60a5fa;
+  --text:#e5e7eb;
+  --glass:rgba(255,255,255,0.08);
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Poppins',system-ui,sans-serif;
+}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top, #12183a, #05070f);
+  color:var(--text);
+  text-align:center;
+  overflow:hidden;
+}
+
+/* ---------- LOADING ---------- */
+#loading{
+  position:fixed;
+  inset:0;
+  background:#05070f;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+  animation:fadeOut 1s ease forwards;
+  animation-delay:4s;
+}
+
+#loading h1{
+  font-size:42px;
+  letter-spacing:2px;
+  margin:0;
+  animation:pulse 2s infinite;
+}
+
+#loading span{
+  opacity:0.7;
+  margin-top:10px;
+}
+
+@keyframes pulse{
+  0%{transform:scale(1)}
+  100%{transform:scale(1.05)}
+}
+
+@keyframes fadeOut{
+  to{opacity:0; pointer-events:none;}
+}
+
+/* ---------- UI ---------- */
+.container{
+  padding:16px;
+  max-width:480px;
+  margin:auto;
+}
+
+.panel{
+  background:linear-gradient(180deg, var(--glass), transparent);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+  backdrop-filter:blur(12px);
+}
+
+h1{
+  margin:8px 0;
+  font-weight:800;
+}
+
+#clicks{
+  font-size:36px;
+  font-weight:800;
+  margin:12px 0;
+}
+
+#tap{
+  width:100%;
+  padding:26px;
+  font-size:26px;
+  font-weight:800;
+  border:none;
+  border-radius:20px;
+  background:linear-gradient(135deg, var(--accent), #22c55e);
+  color:#06210f;
+  cursor:pointer;
+  transition:transform .08s ease, box-shadow .08s ease;
+  box-shadow:0 12px 30px rgba(34,197,94,0.4);
+}
+
+#tap:active{
+  transform:scale(0.95);
+  box-shadow:0 6px 16px rgba(34,197,94,0.4);
+}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  opacity:0.85;
+}
+
+/* ---------- PARTICLES ---------- */
+.particle{
+  position:absolute;
+  pointer-events:none;
+  font-weight:700;
+  color:var(--accent);
+  animation:floatUp 0.8s ease forwards;
+}
+
+@keyframes floatUp{
+  from{opacity:1; transform:translateY(0)}
+  to{opacity:0; transform:translateY(-60px)}
+}
+</style>
+</head>
+
+<body>
+
+<!-- Loading Screen -->
+<div id="loading">
+  <h1>Tap Trials</h1>
+  <span>Loading…</span>
+</div>
+
+<div class="container">
+
+  <div class="panel">
+    <h1>Tap Trials</h1>
+    <div id="clicks">0</div>
+    <button id="tap">TAP</button>
+    <div class="stats">
+      <div>Power: <b id="power">1</b></div>
+      <div>CPS: <b id="cps">0</b></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- SAVE ---------- */
+let data = JSON.parse(localStorage.getItem("tapTrialsSave")) || {
+  clicks:0,
+  power:1,
+  cps:0
+};
+
+/* ---------- FORMAT ---------- */
+function fmt(n){
+  if(n < 1e3) return Math.floor(n);
+  const s=["K","M","B","T","Qa","Qi"];
+  let i=Math.floor(Math.log10(n)/3);
+  return (n/Math.pow(1e3,i)).toFixed(2).replace(".00","")+s[i-1];
+}
+
+/* ---------- PARTICLES ---------- */
+function particle(x,y,text){
+  const p=document.createElement("div");
+  p.className="particle";
+  p.textContent=text;
+  p.style.left=x+"px";
+  p.style.top=y+"px";
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),800);
+}
+
+/* ---------- CLICK ---------- */
+const tap=document.getElementById("tap");
+tap.onclick=()=>{
+  data.clicks+=data.power;
+  const r=tap.getBoundingClientRect();
+  particle(r.left+r.width/2,r.top,"+"+fmt(data.power));
+  update();
+};
+
+/* ---------- UPDATE ---------- */
+function update(){
+  document.getElementById("clicks").textContent=fmt(data.clicks);
+  document.getElementById("power").textContent=fmt(data.power);
+  document.getElementById("cps").textContent=fmt(data.cps);
+  localStorage.setItem("tapTrialsSave",JSON.stringify(data));
+}
+
+/* ---------- AUTO ---------- */
+setInterval(()=>{
+  data.clicks+=data.cps;
+  update();
+},1000);
+
+update();
+</script>
+</body>
+</html>
